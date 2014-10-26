@@ -13,9 +13,9 @@ object Server extends App {
   implicit val system = ActorSystem("on-spray-can")
 
   // create and start our service actor
-  val service = system.actorOf(Props[Router], "demo-service")
+  val service = system.actorOf(Props[Router], "router-service")
 
-  implicit val timeout = Timeout(5.seconds)
+  implicit val timeout = Timeout(20 seconds)
   // start a new HTTP server on port 8080 with our service actor as the handler
   IO(Http) ? Http.Bind(service, interface = "0.0.0.0", port = 9090)
 }

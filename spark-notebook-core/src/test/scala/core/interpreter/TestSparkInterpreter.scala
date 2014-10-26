@@ -22,6 +22,13 @@ class TestSparkInterpreter extends FlatSpec with Matchers {
     result should be("out: String = test\n")
   }
 
+  "an interpreter with compile error" should "report error" in {
+    val sint = TestActorRef(new SparkInterpreter("notebook"))
+    val future = sint ? "val out = error_compile"
+    val result:String = future.value.get.get.asInstanceOf[String]
+    result should include ("not found: value error_compile")
+  }
+
 
   "an interpreter" should "execute a simple spark job" in {
     val sint = TestActorRef(new SparkInterpreter("notebook"))
