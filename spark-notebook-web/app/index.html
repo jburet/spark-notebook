@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<!--[if lt IE 7]>      <html lang="en" ng-app="sparkNotebook" class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
+<!--[if IE 7]>         <html lang="en" ng-app="sparkNotebook" class="no-js lt-ie9 lt-ie8"> <![endif]-->
+<!--[if IE 8]>         <html lang="en" ng-app="sparkNotebook" class="no-js lt-ie9"> <![endif]-->
+<!--[if gt IE 8]><!--> <html lang="en" ng-app="sparkNotebook" class="no-js"> <!--<![endif]-->
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Spark-notebook</title>
+    <meta name="description" content="">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="bower_components/html5-boilerplate/css/normalize.css">
+    <link rel="stylesheet" href="bower_components/html5-boilerplate/css/main.css">
+    <link rel="stylesheet" href="spark-notebook.css">
+    <link rel="stylesheet" href="notebook/notebook.css">
+    <link rel="stylesheet" href="repository/repository.css">
+    <script src="bower_components/html5-boilerplate/js/vendor/modernizr-2.6.2.min.js"></script>
+</head>
+<body>
+
+<div ng-view></div>
+
+<script src="bower_components/angular/angular.js"></script>
+<script src="bower_components/angular-route/angular-route.js"></script>
+<script type="text/javascript" src="bower_components/ace-builds/src-min-noconflict/ace.js"></script>
+<script type="text/javascript" src="bower_components/angular-ui-ace/ui-ace.js"></script>
+<script src="spark-notebook.js"></script>
+<script src="notebook/notebook.js"></script>
+<script src="repository/repository.js"></script>
+</body>
+</html>

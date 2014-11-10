@@ -1,0 +1,8 @@
+<h2>Notebook </h2>
+
+<div class="notebook" ng-init="init()">
+    <button id="play_notebook" ng-click="play(content)">Play</button>
+    <button id="refresh_notebook" ng-click="refresh()">Result</button>
+    <div ui-ace="{mode: 'scala'}" ng-model="content"></div>
+    <div ui-ace ng-model="result" readonly="true"></div>
+</div>

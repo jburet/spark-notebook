@@ -2,3 +2,5 @@
 .idea
 spark-notebook-core/project/
 spark-notebook-core/target/
+spark-notebook-web/node_modules
+spark-notebook-web/app/bower_components
