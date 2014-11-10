@@ -5,6 +5,7 @@ import _root_.akka.util.Timeout
 import core.notebook.Notebook.{Content}
 import core.notebook.Notebooks.{JobStatus, ListJobs}
 import core.notebook.{Notebook, Notebooks}
+import core.storage.FileStorageActor
 import org.json4s.{Formats, DefaultFormats}
 import org.scalatra._
 import org.scalatra.json._
@@ -33,7 +34,7 @@ class RouterAPI(actorSystem: ActorSystem, notebooks: ActorRef) extends ScalatraS
   // Get notebook list
   get("/notebooks") {
     new AsyncResult {
-      val is = notebooks ? Notebooks.List()
+      val is = notebooks ? FileStorageActor.List()
     }
   }
 
@@ -72,7 +73,7 @@ class RouterAPI(actorSystem: ActorSystem, notebooks: ActorRef) extends ScalatraS
 
   post("/notebook") {
     new AsyncResult {
-      val is = notebooks ask Notebooks.Create()
+      val is = notebooks ask Notebooks.CreateNotebook()
     }
 
   }

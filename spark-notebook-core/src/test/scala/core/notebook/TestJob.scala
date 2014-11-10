@@ -2,7 +2,6 @@ package core.notebook
 
 import akka.actor.ActorSystem
 import akka.testkit.{TestActorRef, ImplicitSender, TestKit}
-import core.interpreter.SparkInterpreter.InterpreterResult
 import core.notebook.Job.{JobSuccess, RegisterForComplete}
 import org.scalatest.{Matchers, FlatSpecLike}
 import akka.util.Timeout

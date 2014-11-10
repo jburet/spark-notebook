@@ -1,15 +1,12 @@
 package core.notebook
 
-import java.util.UUID
-
 import akka.actor.{ActorRef, Props, Actor}
 import akka.event.{LoggingReceive, Logging}
 import akka.util.Timeout
 import core.interpreter.SparkInterpreter
 import core.interpreter.SparkInterpreter.{InterpreterResult, Init}
 import core.notebook.Notebook._
-
-import scala.concurrent.ExecutionContext
+import core.storage.FileStorageActor
 
 /**
  * Notebook actor.
@@ -19,24 +16,38 @@ import scala.concurrent.ExecutionContext
  * - Execute the code and format the result for front end
  * - Manage interpreters used by notebook
  */
-class Notebook(val id: String) extends Actor {
+class Notebook(val id: String, val storage: ActorRef) extends Actor {
+
+  import scala.concurrent.ExecutionContext.Implicits.global
+
+  import _root_.akka.pattern.ask
 
   implicit val defaultTimeout = Timeout(10)
 
   val log = Logging(context.system, this)
   val sint = context.actorOf(SparkInterpreter.props("notebook_" + id), "notebook_" + id)
   sint ! Init()
-  //val storage = context.actorOf(MemoryStorageActor.props(id), id)
   var content: String = ""
   var result: String = ""
   var jobs = Map[String, ActorRef]()
 
 
   override def receive = LoggingReceive {
+    case InitNotebook => {
+      sint ! Init()
+      // Load content
+      storage ? FileStorageActor.ReadContent(id) onSuccess {
+        case c: String => content = c
+      }
+      storage ? FileStorageActor.ReadResult(id) onSuccess {
+        case c: String => result = c
+      }
+    }
     // Return content of notebook
     case _: GetContent => sender ! Content(content, result)
     // Save content from client
     case c: Content => {
+      storage ! FileStorageActor.WriteContent(id, content)
       content = c.content
     }
     // Play current content of notebook
@@ -45,6 +56,7 @@ class Notebook(val id: String) extends Actor {
     }
     case ir: InterpreterResult => {
       result = ir.content
+      storage ! FileStorageActor.WriteResult(id, result)
     }
 
     // Unknown message
@@ -57,7 +69,9 @@ class Notebook(val id: String) extends Actor {
 }
 
 object Notebook {
-  def props(id: String) = Props(new Notebook(id))
+  def props(id: String, storage: ActorRef) = Props(new Notebook(id, storage))
+
+  case class InitNotebook()
 
   case class GetContent()
 

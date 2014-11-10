@@ -18,13 +18,13 @@ class TestNotebook extends FlatSpec with Matchers {
 
 
   "a notebook" should "save content" in {
-    val nb = TestActorRef(new Notebook("test-notebook"))
+    val nb = TestActorRef(new Notebook("test-notebook", null))
     nb ! Content("test content", "")
     nb.underlyingActor.content should be("test content")
   }
 
   "a notebook" should "return content " in {
-    val nb = TestActorRef(new Notebook("test-notebook"))
+    val nb = TestActorRef(new Notebook("test-notebook", null))
     nb.underlyingActor.content = "test content"
     nb ? Notebook.GetContent() onComplete {
       case Success(content: Content) => content.content should be("test content")

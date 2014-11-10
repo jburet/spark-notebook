@@ -6,7 +6,7 @@ import akka.actor.{Props, ActorRef, Actor}
 import akka.event.LoggingReceive
 import akka.util.Timeout
 import core.notebook.Notebooks._
-import core.storage.MemoryStorageActor
+import core.storage.FileStorageActor
 
 
 class Notebooks extends Actor {
@@ -14,25 +14,38 @@ class Notebooks extends Actor {
   implicit val defaultTimeout = Timeout(10)
 
   var openNotebooks = Map[String, ActorRef]()
-  val storage = context.actorOf(Props[MemoryStorageActor], "memory-storage")
+  val storage = context.actorOf(Props[FileStorageActor], "fs-storage")
+  storage ! FileStorageActor.Init("notebook")
 
 
   def receive = LoggingReceive {
-    case command: List => {
+    case command: FileStorageActor.List => {
       storage forward command
     }
-    case Create() => {
+    case CreateNotebook() => {
       // Generate unique id for notebook
       val uid = UUID.randomUUID().toString
       // Store
-      val nb = context.actorOf(Props(classOf[Notebook], "notebook-" + uid))
-      storage !(uid, nb)
+      val nb = context.actorOf(Props(classOf[Notebook], uid, storage))
+      storage ! FileStorageActor.Create(uid)
       openNotebooks += uid -> nb
       sender ! uid
     }
     case Open(id) => {
-      val n = openNotebooks(id)
-      sender ! n
+      openNotebooks.get(id) match {
+        case None => {
+          // Load from storage
+          val nb = context.actorOf(Props(classOf[Notebook], id, storage))
+          nb ! Notebook.InitNotebook()
+          openNotebooks += id -> nb
+          sender ! nb
+
+        }
+        case Some(nb: ActorRef) => {
+          sender ! nb
+        }
+      }
+
     }
     case Submit(id) => {
       val jobid = UUID.randomUUID().toString
@@ -48,18 +61,15 @@ class Notebooks extends Actor {
 
 object Notebooks {
 
-  case class List()
 
-  case class NotebookList(notebooks: Set[String])
-
-  // Open a notebook
-  case class Open(id: String)
-
-  case class Submit(jobid: String)
-
-  case class Create()
+  case class CreateNotebook()
 
   case class NotebookNotFound()
+
+  case class Open(id: String)
+
+
+  case class Submit(jobid: String)
 
   case class ListJobs()
 
