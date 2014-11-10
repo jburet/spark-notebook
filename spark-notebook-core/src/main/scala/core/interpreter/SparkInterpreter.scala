@@ -163,7 +163,7 @@ class SparkInterpreter(appname: String) extends Actor with ActorLogging {
 
   /* ACTOR METHOD */
 
-  def receive = LoggingReceive {
+  def receive = LoggingReceive({
     case _: Init => init()
     case (job: ActorRef, id: String, line: String) => {
       out.reset()
@@ -174,7 +174,7 @@ class SparkInterpreter(appname: String) extends Actor with ActorLogging {
     }
     case _: Stop => close()
     case other => log.warning("invalid_message, " + other)
-  }
+  })
 
   override def postStop(): Unit = {
     close()

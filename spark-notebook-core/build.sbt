@@ -37,9 +37,13 @@ libraryDependencies += "org.scalatra" %% "scalatra-scalatest" % ScalatraVersion 
 
 libraryDependencies += "javax.servlet" % "javax.servlet-api" % "3.1.0"
 
-libraryDependencies += "org.eclipse.jetty" % "jetty-server" % "8.1.16.v20140903"
+//libraryDependencies += "org.eclipse.jetty" % "jetty-server" % "8.1.16.v20140903"
 
-libraryDependencies += "org.eclipse.jetty" % "jetty-webapp" % "8.1.16.v20140903"
+libraryDependencies += "org.eclipse.jetty" % "jetty-server" % "9.2.1.v20140609"
+
+//libraryDependencies += "org.eclipse.jetty" % "jetty-webapp" % "8.1.16.v20140903"
+
+libraryDependencies += "org.eclipse.jetty" % "jetty-webapp" % "9.2.1.v20140609"
 
 libraryDependencies += "org.spark-project.akka" %% "akka-actor" % akkaV
 
