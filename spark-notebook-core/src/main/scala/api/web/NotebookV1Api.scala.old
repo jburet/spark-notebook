@@ -1,0 +1,96 @@
+package api.web
+
+import akka.actor.{ActorRef, Props, Actor}
+import akka.pattern.{ask}
+import akka.util.Timeout
+import core.notebook.Notebooks.{NotebookNotFound, Open}
+import core.notebook.OpenNotebook.{SaveResult, Notebook, NotebookExecutionResult, NotebookResult}
+import spray.routing
+import scala.concurrent.ExecutionContext
+import scala.concurrent.duration._
+import core.notebook.{OpenNotebook, Notebooks}
+import spray.routing.HttpService
+import scala.util.{Failure, Success}
+import ExecutionContext.Implicits.global
+import spray.json._
+import NotebookJsonProtocol._
+
+class NotebookV1Api extends Actor with NotebookService {
+
+  def actorRefFactory = context
+
+  def receive = runRoute(notebookRoute)
+}
+
+trait NotebookService extends HttpService {
+
+  val notebooks = actorRefFactory.actorOf(Props[Notebooks])
+  implicit val timeout = Timeout(15 seconds)
+  val notebookRoute =
+    post {
+      complete("notebook created")
+    } ~
+      pathPrefix(Segment) { id =>
+        pathEnd {
+          get {
+            onNotebookOpenComplete(id, { notebook: ActorRef =>
+              onComplete(notebook ? OpenNotebook.ContentCommand()) {
+                case Success(content: NotebookExecutionResult) => complete(content.toJson.toString)
+                case Failure(t) => complete(t)
+                case other => complete("notebook_content, receive other thing: " + other.toString)
+              }
+            })
+          } ~
+            put {
+              entity(as[Notebook]) { n =>
+                onNotebookOpenComplete(id, { notebook: ActorRef =>
+                  onComplete(notebook ? OpenNotebook.ContentCommand()) {
+                    case Success(content: SaveResult) => complete(content.toJson.toString)
+                    case Failure(t) => complete(t)
+                    case other => complete("notebook_content, receive other thing: " + other.toString)
+                  }
+                })
+              }
+            } ~
+            options {
+              complete("")
+            }
+        } ~
+          path("play") {
+            get {
+              onNotebookOpenComplete(id, { notebook: ActorRef =>
+                notebook ! OpenNotebook.PlayCommand()
+                complete("notebook played")
+              })
+
+            }
+          } ~
+          path("result") {
+            get {
+              onNotebookOpenComplete(id, { notebook: ActorRef =>
+                onComplete(notebook ? OpenNotebook.ContentCommand()) {
+                  case Success(ir: NotebookResult) => complete(ir.toJson.toString)
+                  case Failure(t) => complete(t)
+                  case other => complete("notebook_result, receive other thing: " + other.toString)
+                }
+              })
+
+            }
+          }
+      }
+
+  def onNotebookOpenComplete(id: String, openSuccess: (ActorRef) => routing.Route): routing.Route = {
+    onComplete(notebooks ? Open(id)) {
+      case Success(Some(notebook: ActorRef)) => {
+        openSuccess(notebook)
+      }
+      case Success(_: NotebookNotFound) => {
+        respondWithStatus(404) {
+          complete("notebook_not_found")
+        }
+      }
+      case Failure(t) => complete(t)
+      case other => complete("notebook_open, receive other thing: " + other.toString)
+    }
+  }
+}

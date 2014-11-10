@@ -1,10 +1,11 @@
 package core.interpreter
 
-import java.io.{OutputStream, ByteArrayOutputStream, PrintStream, PrintWriter}
+import java.io.{ByteArrayOutputStream, PrintStream, PrintWriter}
 
-import akka.actor.{Props, Actor}
-import akka.event.Logging
-import core.interpreter.SparkInterpreter.{InterpreterResult, Init}
+import akka.actor.{ActorLogging, ActorRef, Props, Actor}
+import akka.event.{LoggingReceive}
+import core.interpreter.SparkInterpreter.{Stop, InterpreterResult, Init}
+import core.notebook.Job.JobSuccess
 import org.apache.spark.{SparkConf, SparkContext}
 import org.apache.spark.repl.{SparkIMain, SparkILoop}
 import org.apache.spark.ui.jobs.JobProgressListener
@@ -15,17 +16,18 @@ import scala.tools.nsc.{Interpreter, Settings}
 import scala.tools.nsc.interpreter.{Results}
 
 object SparkInterpreter {
+
   def props(appname: String) = Props(new SparkInterpreter(appname))
 
   case class Init()
+
+  case class Stop()
 
   case class InterpreterResult(content: String)
 
 }
 
-class SparkInterpreter(appname: String) extends Actor {
-
-  val log = Logging(context.system, this)
+class SparkInterpreter(appname: String) extends Actor with ActorLogging {
 
   var out: ByteArrayOutputStream = _
   var interpreter: SparkILoop = _
@@ -161,21 +163,17 @@ class SparkInterpreter(appname: String) extends Actor {
 
   /* ACTOR METHOD */
 
-  def receive: Receive = {
+  def receive = LoggingReceive {
     case _: Init => init()
-    case lines: Array[String] => {
-      out.reset()
-      interpret(lines)
-      sender ! InterpreterResult(out.toString)
-      out.reset()
-    }
-    case line: String => {
+    case (job: ActorRef, id: String, line: String) => {
       out.reset()
       interpret(line)
-      sender ! InterpreterResult(out.toString)
+      sender ! InterpreterResult(out.toString())
+      job ! JobSuccess(id)
       out.reset()
     }
-    case other => log.warning("invalid_message, " + other.toString)
+    case _: Stop => close()
+    case other => log.warning("invalid_message, " + other)
   }
 
   override def postStop(): Unit = {
