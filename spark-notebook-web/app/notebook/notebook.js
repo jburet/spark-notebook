@@ -1,6 +1,6 @@
 'use strict';
 
-angular.module('sparkNotebook.notebook', ['ngRoute'])
+angular.module('sparkNotebook.notebook', ['ngRoute', 'angular.atmosphere'])
 
 .config(['$routeProvider', function($routeProvider) {
   $routeProvider.when('/notebook', {
@@ -9,7 +9,7 @@ angular.module('sparkNotebook.notebook', ['ngRoute'])
   });
 }])
 
-.controller('NotebookCtrl', ['$scope', '$http', '$location', function($scope, $http, $location) {
+.controller('NotebookCtrl', ['$scope', '$http', '$location', 'atmosphereService', function($scope, $http, $location, atmosphereService) {
 
   $scope.id = ''
 
@@ -45,4 +45,63 @@ angular.module('sparkNotebook.notebook', ['ngRoute'])
 			$scope.result = data.result
 		});
   };
+
+
+  // Async
+  $scope.model = {
+    transport: 'websocket',
+    messages: []
+  };
+
+  var socket;
+
+  var request = {
+    url: 'ws://localhost:8080/async/notebook-status',
+    contentType: 'application/json',
+    logLevel: 'debug',
+    transport: 'websocket',
+    trackMessageLength: false,
+    reconnectInterval: 5000,
+    enableXDR: true,
+    timeout: 24 * 3600 * 60000
+  };
+
+  request.onClientTimeout = function(response){
+    console.log("onClientTimeout, "+response)
+    setTimeout(function(){
+      socket = atmosphereService.subscribe(request);
+    }, request.reconnectInterval);
+  };
+
+  request.onReopen = function(response){
+    console.log("onReopen, "+response)
+  };
+
+  request.onMessage = function(response){
+    switch (JSON.parse(response.responseBody).type) {
+      case "job_complete":
+        $scope.refresh()
+        break;
+    }
+  };
+
+  request.onClose = function(response){
+    console.log('Closing socket connection for client ' + $rootScope.clientId);
+  };
+
+  request.onMessagePublished = function(response) {
+    console.log("onMessagePublished, "+response)
+  }
+
+  request.onOpen = function(response){
+    $scope.model.transport = response.transport;
+    $scope.model.connected = true;
+    $scope.model.content = 'Atmosphere connected using ' + response.transport;
+
+    // Register for notebook event
+    socket.push(JSON.stringify({type: "register_notebook", id: $scope.id}))
+  };
+
+  socket = atmosphereService.subscribe(request)
+
 }]);

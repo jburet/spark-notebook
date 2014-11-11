@@ -2,15 +2,16 @@ package api.web
 
 import _root_.akka.actor.{ActorRef, ActorSystem}
 import _root_.akka.util.Timeout
-import core.notebook.Notebook.{Content}
 import core.notebook.Notebooks.{JobStatus, ListJobs}
-import core.notebook.{Notebook, Notebooks}
+import core.notebook.{Notebooks}
 import core.storage.FileStorageActor
+import core.storage.FileStorageActor.{WriteContent, Content}
 import org.json4s.{Formats, DefaultFormats}
 import org.scalatra._
 import org.scalatra.json._
+import scala.concurrent.duration._
 
-import scala.concurrent.{Promise, Future, ExecutionContext}
+import scala.concurrent.{Promise, ExecutionContext}
 import scala.util.{Try, Success, Failure}
 
 class RouterAPI(actorSystem: ActorSystem, notebooks: ActorRef) extends ScalatraServlet with CorsSupport with FutureSupport with JacksonJsonSupport {
@@ -19,7 +20,7 @@ class RouterAPI(actorSystem: ActorSystem, notebooks: ActorRef) extends ScalatraS
 
   import _root_.akka.pattern.ask
 
-  implicit val defaultTimeout = Timeout(10)
+  implicit val defaultTimeout = Timeout(10 second)
 
   protected implicit val jsonFormats: Formats = DefaultFormats
 
@@ -46,7 +47,7 @@ class RouterAPI(actorSystem: ActorSystem, notebooks: ActorRef) extends ScalatraS
       val prom = Promise[Content]()
       notebooks ? Notebooks.Open(params("id")) onComplete {
         case Success(notebook: ActorRef) => {
-          notebook ? Notebook.GetContent() onComplete {
+          notebook ? FileStorageActor.ReadAll(params("id")) onComplete {
             case Success(content: Content) => prom.complete(Try(content))
             case Failure(ex) => prom.failure(ex)
           }
@@ -61,9 +62,10 @@ class RouterAPI(actorSystem: ActorSystem, notebooks: ActorRef) extends ScalatraS
 
   put("/notebook/:id") {
     val content = parsedBody.extract[Content]
-    notebooks ? Notebooks.Open(params("id")) onComplete {
+    val id = params("id")
+    notebooks ? Notebooks.Open(id) onComplete {
       case Success(notebook: ActorRef) => {
-        notebook ! content
+        notebook ! WriteContent(id, content.content)
         Accepted()
       }
       case Failure(ex) => halt(500, ex.getMessage)

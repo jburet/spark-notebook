@@ -1,12 +1,15 @@
 package core.notebook
 
-import akka.actor.{ActorRef, Props, Actor}
+import akka.actor.{ActorLogging, ActorRef, Props, Actor}
 import akka.event.{LoggingReceive, Logging}
 import akka.util.Timeout
 import core.interpreter.SparkInterpreter
 import core.interpreter.SparkInterpreter.{InterpreterResult, Init}
+import core.notebook.Job.JobComplete
 import core.notebook.Notebook._
-import core.storage.FileStorageActor
+import core.storage.FileStorageActor._
+import scala.concurrent.duration._
+import scala.util.{Failure, Success}
 
 /**
  * Notebook actor.
@@ -16,51 +19,60 @@ import core.storage.FileStorageActor
  * - Execute the code and format the result for front end
  * - Manage interpreters used by notebook
  */
-class Notebook(val id: String, val storage: ActorRef) extends Actor {
+class Notebook(val id: String, val storage: ActorRef) extends Actor with ActorLogging {
 
-  import scala.concurrent.ExecutionContext.Implicits.global
 
   import _root_.akka.pattern.ask
 
-  implicit val defaultTimeout = Timeout(10)
+  implicit val defaultTimeout = Timeout(10 second)
 
-  val log = Logging(context.system, this)
-  val sint = context.actorOf(SparkInterpreter.props("notebook_" + id), "notebook_" + id)
-  sint ! Init()
-  var content: String = ""
-  var result: String = ""
+  import scala.concurrent.ExecutionContext.Implicits.global
+
+  val sint = context.actorOf(SparkInterpreter.props("notebook_" + id), "interpreter_" + id)
   var jobs = Map[String, ActorRef]()
+  var connectedClient = Set[ActorRef]()
 
 
   override def receive = LoggingReceive {
-    case InitNotebook => {
+    case _: InitNotebook => {
       sint ! Init()
-      // Load content
-      storage ? FileStorageActor.ReadContent(id) onSuccess {
-        case c: String => content = c
-      }
-      storage ? FileStorageActor.ReadResult(id) onSuccess {
-        case c: String => result = c
-      }
     }
     // Return content of notebook
-    case _: GetContent => sender ! Content(content, result)
+    case ra: ReadAll => {
+      storage forward ra
+    }
     // Save content from client
-    case c: Content => {
-      storage ! FileStorageActor.WriteContent(id, content)
-      content = c.content
+    case c: WriteContent => {
+      storage ! c
     }
     // Play current content of notebook
     case (job: ActorRef, jid: String) => {
-      sint !(job, jid, content)
+      storage ? ReadContent(id) onComplete {
+        case Success(content: String) => {
+          sint ?(job, jid, content) onSuccess {
+            case InterpreterResult(content: String) => storage ! WriteResult(id, content)
+          }
+        }
+      }
     }
     case ir: InterpreterResult => {
-      result = ir.content
-      storage ! FileStorageActor.WriteResult(id, result)
+      storage ! WriteResult(id, ir.content)
+    }
+    case _: RegisterEvent => {
+      connectedClient += sender
+      println(connectedClient)
+    }
+    case _: UnregisterEvent => {
+      connectedClient -= sender
+    }
+    case jc: JobComplete => {
+      connectedClient.foreach { cc =>
+        cc ! jc
+      }
     }
 
     // Unknown message
-    case other => log.warning("unknown_message, " + other.toString)
+    case other => log.warning("unknown_message, {}, from, {} ", Array(other.toString, sender))
   }
 
   override def postStop() {
@@ -73,9 +85,9 @@ object Notebook {
 
   case class InitNotebook()
 
-  case class GetContent()
+  case class RegisterEvent()
 
-  case class Content(content: String, result: String)
+  case class UnregisterEvent()
 
   object InterpreterStatus extends Enumeration {
     type InterpreterStatus = Value

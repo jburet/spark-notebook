@@ -2,7 +2,7 @@
 import javax.servlet.ServletContext
 
 import akka.actor.{ActorSystem, Props}
-import api.web.RouterAPI
+import api.web.{NotebookStatusController, RouterAPI}
 import core.notebook.Notebooks
 import org.scalatra.LifeCycle
 
@@ -13,6 +13,7 @@ class ScalatraBootstrap extends LifeCycle {
   val notebooks = system.actorOf(Props[Notebooks], "notebooks")
 
   override def init(context: ServletContext) {
+    context mount(new NotebookStatusController(system, notebooks), "/async/*")
     context mount(new RouterAPI(system, notebooks), "/*")
   }
 

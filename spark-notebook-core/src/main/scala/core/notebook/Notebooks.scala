@@ -2,16 +2,21 @@ package core.notebook
 
 import java.util.UUID
 
-import akka.actor.{Props, ActorRef, Actor}
+import akka.actor.{ActorLogging, Props, ActorRef, Actor}
 import akka.event.LoggingReceive
 import akka.util.Timeout
 import core.notebook.Notebooks._
 import core.storage.FileStorageActor
+import scala.concurrent.duration._
 
 
-class Notebooks extends Actor {
+class Notebooks extends Actor with ActorLogging {
 
-  implicit val defaultTimeout = Timeout(10)
+  import _root_.akka.pattern.ask
+
+  implicit val defaultTimeout = Timeout(10 second)
+
+  import scala.concurrent.ExecutionContext.Implicits.global
 
   var openNotebooks = Map[String, ActorRef]()
   val storage = context.actorOf(Props[FileStorageActor], "fs-storage")
@@ -26,20 +31,20 @@ class Notebooks extends Actor {
       // Generate unique id for notebook
       val uid = UUID.randomUUID().toString
       // Store
-      val nb = context.actorOf(Props(classOf[Notebook], uid, storage))
+      val nb = context.actorOf(Props(classOf[Notebook], uid, storage), "notebook_"+uid)
       storage ! FileStorageActor.Create(uid)
       openNotebooks += uid -> nb
+      nb ! Notebook.InitNotebook()
       sender ! uid
     }
     case Open(id) => {
       openNotebooks.get(id) match {
         case None => {
           // Load from storage
-          val nb = context.actorOf(Props(classOf[Notebook], id, storage))
-          nb ! Notebook.InitNotebook()
+          val nb = context.actorOf(Props(classOf[Notebook], id, storage), "notebook_"+id)
           openNotebooks += id -> nb
+          nb ! Notebook.InitNotebook()
           sender ! nb
-
         }
         case Some(nb: ActorRef) => {
           sender ! nb
@@ -49,10 +54,17 @@ class Notebooks extends Actor {
     }
     case Submit(id) => {
       val jobid = UUID.randomUUID().toString
-      val job = context.actorOf(Job.props(jobid), "job-" + jobid)
+
       val n = openNotebooks(id)
+      val job = context.actorOf(Job.props(jobid, Some(n)), "job-" + jobid)
       n !(job, jobid)
       sender ! jobid
+    }
+    case (notebookId: String, register: Notebook.RegisterEvent) => {
+      openNotebooks(notebookId) forward register
+    }
+    case (notebookId: String, ur: Notebook.UnregisterEvent) => {
+      openNotebooks(notebookId) forward ur
     }
   }
 
@@ -67,7 +79,6 @@ object Notebooks {
   case class NotebookNotFound()
 
   case class Open(id: String)
-
 
   case class Submit(jobid: String)
 

@@ -2,30 +2,25 @@ package core.notebook
 
 import akka.actor.{ActorRef, Props, Actor}
 import akka.event.{LoggingReceive, Logging}
-import core.interpreter.SparkInterpreter.InterpreterResult
-import core.notebook.Job.{JobSuccess, RegisterForComplete}
+import core.notebook.Job.{JobComplete}
 
 
-class Job(id: String) extends Actor {
+class Job(id: String, nb: Option[ActorRef]) extends Actor {
   val log = Logging(context.system, this)
 
-  var callback: Option[ActorRef] = None
-
-  override def receive = LoggingReceive{
-    case _: RegisterForComplete => callback = Some(sender)
-    case js: JobSuccess => callback match {
-      case Some(actor) => actor ! js
+  override def receive = LoggingReceive {
+    case jc: JobComplete => nb match {
       case None =>
+      case Some(ar: ActorRef) => ar ! jc
     }
-    case other => println(other)
+
+    case other => log.warning("unknonw_message", other)
   }
 }
 
 object Job {
-  def props(id: String) = Props(new Job(id))
+  def props(id: String, nb: Option[ActorRef]) = Props(new Job(id, nb))
 
-  case class RegisterForComplete()
-
-  case class JobSuccess(jobId: String)
+  case class JobComplete(jobId: String)
 
 }

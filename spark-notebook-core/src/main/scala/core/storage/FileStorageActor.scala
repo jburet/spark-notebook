@@ -57,7 +57,20 @@ class FileStorageActor extends Actor with ActorLogging {
         case false => sender ! ""
       }
     }
-    case other => log.error("unknown_message")
+    case ReadAll(id: String) => {
+      val contentFile = baseDir.resolve(id).resolve("content.scala").toFile
+      val resultFile = baseDir.resolve(id).resolve("result.txt").toFile
+      var content = ""
+      var result = ""
+      contentFile.exists() match {
+        case true => content = scala.io.Source.fromFile(contentFile).mkString
+      }
+      resultFile.exists() match {
+        case true => result = scala.io.Source.fromFile(resultFile).mkString
+      }
+      sender ! Content(content, result)
+    }
+    case other => log.error("unknown_message, {}, from, {}", Array(other, sender))
   }
 }
 
@@ -70,6 +83,10 @@ object FileStorageActor {
   case class ReadContent(id: String)
 
   case class ReadResult(id: String)
+
+  case class ReadAll(id: String)
+
+  case class Content(content: String, result: String)
 
   case class WriteContent(id: String, content: String)
 

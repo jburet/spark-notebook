@@ -5,7 +5,7 @@ import java.io.{ByteArrayOutputStream, PrintStream, PrintWriter}
 import akka.actor.{ActorLogging, ActorRef, Props, Actor}
 import akka.event.{LoggingReceive}
 import core.interpreter.SparkInterpreter.{Stop, InterpreterResult, Init}
-import core.notebook.Job.JobSuccess
+import core.notebook.Job.JobComplete
 import org.apache.spark.{SparkConf, SparkContext}
 import org.apache.spark.repl.{SparkIMain, SparkILoop}
 import org.apache.spark.ui.jobs.JobProgressListener
@@ -169,7 +169,7 @@ class SparkInterpreter(appname: String) extends Actor with ActorLogging {
       out.reset()
       interpret(line)
       sender ! InterpreterResult(out.toString())
-      job ! JobSuccess(id)
+      job ! JobComplete(id)
       out.reset()
     }
     case _: Stop => close()

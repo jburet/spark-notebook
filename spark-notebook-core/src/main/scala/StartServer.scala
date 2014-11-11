@@ -1,5 +1,5 @@
 
-import api.web.RouterAPI
+import api.web.{NotebookStatusController, RouterAPI}
 import org.eclipse.jetty.server.Server
 import org.eclipse.jetty.webapp.WebAppContext
 import org.scalatra.servlet.ScalatraListener
@@ -14,6 +14,7 @@ def main(args: Array[String]) {
   context.setResourceBase("src/main/webapp")
   context.addEventListener(new ScalatraListener)
   context.addServlet(classOf[RouterAPI], "/")
+  context.addServlet(classOf[NotebookStatusController], "/async")
 
   server.setHandler(context)
 
