@@ -4,3 +4,8 @@ spark-notebook-core/project/
 spark-notebook-core/target/
 spark-notebook-web/node_modules
 spark-notebook-web/app/bower_components
+spark-notebook-core/notebook/
+spark-notebook-web/.sass-cache/
+spark-notebook-web/.tmp/
+spark-notebook-web/gulpfile.js
+target

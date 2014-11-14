@@ -1,8 +1,25 @@
-<h2>Notebook </h2>
+<div class="notebook content-container" ng-init="init()">
 
-<div class="notebook" ng-init="init()">
-    <button id="play_notebook" ng-click="play(content)">Play</button>
-    <button id="refresh_notebook" ng-click="refresh()">Result</button>
-    <div ui-ace="{mode: 'scala'}" ng-model="content"></div>
-    <div ui-ace ng-model="result" readonly="true"></div>
+  <h2 style="margin-bottom:20px">{{id}}</h2>
+  <div id="menu" style="margin-left: auto;margin-right: auto;width: 70%;">
+    <button class="PaperButton PaperFab PaperFab--colored" id="play_notebook" ng-click="play(content)"><img src="images/navigation/svg/design/ic_arrow_drop_down_24px.svg"></button>
+    <button class="PaperButton PaperFab PaperFab--colored" id="play_notebook" ng-click="play(content)"><img src="images/navigation/svg/design/ic_arrow_drop_up_24px.svg"></button>
+    <button class="PaperButton PaperFab PaperFab--colored" id="play_notebook" ng-click="play(content)"><img src="images/av/svg/design/ic_play_arrow_24px.svg"></button>
+      </div>
+  <div class="Paragraph">
+    <div style="display:table; position:relative; margin-top:20px; width:100%">
+      <div style="display:table-cell;"><p>In [1]:</p></div>
+      <div style="display:table-cell; width:90%; border: 1px solid lightgray;" ui-ace="{mode: 'scala', onLoad : aceLoaded }" ng-model="content"></div>
+    </div>
+
+    <div style="display:table; position:relative; margin-top:20px; width:100%">
+      <div style="display:table-cell;"><p>stdout [1]:</p></div>
+      <div style="display:table-cell; width:90%; border: 1px solid lightgray;" ui-ace="{ onLoad : aceLoaded }" ng-model="result" readonly="true"></div>
+    </div>
+
+    <div style="display:table; position:relative; margin-top:20px; width:100%">
+      <div style="display:table-cell;"><p>data [1]:</p></div>
+      <div style="display:table-cell; width:90%"></div>
+    </div>
+  </div>
 </div>
