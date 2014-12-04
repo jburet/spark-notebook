@@ -60,3 +60,5 @@ libraryDependencies += "org.spark-project.akka" %% "akka-testkit" % akkaV
 libraryDependencies += "ch.qos.logback" % "logback-classic" % "1.0.13"
 
 libraryDependencies += "org.slf4j" % "log4j-over-slf4j" % "1.7.7"
+
+libraryDependencies += "org.parboiled" %% "parboiled" % "2.0.1"

@@ -3,8 +3,8 @@ package api.web
 import akka.actor._
 import akka.event.LoggingReceive
 import core.notebook.Job.JobComplete
-import core.notebook.Notebook
-import core.notebook.Notebook.{UnregisterEvent, RegisterEvent}
+import core.notebook.NotebookActor
+import core.notebook.NotebookActor.{UnregisterEvent, RegisterEvent}
 import org.json4s.JsonAST.{JString, JObject}
 import org.json4s.{DefaultFormats, Formats}
 import org.scalatra.atmosphere._
@@ -53,13 +53,13 @@ with AtmosphereSupport {
         }
         case Disconnected(disconnector, Some(error)) => {
           logger.debug("disconnect_with_error, {}, {}", Array(uuid, error))
-          bridge !(clientNotebook(uuid), Notebook.UnregisterEvent())
+          bridge !(clientNotebook(uuid), NotebookActor.UnregisterEvent())
           clientNotebook -= uuid
           bridge ! PoisonPill
         }
         case Disconnected(disconnector, None) => {
           logger.debug("disconnect, {}", uuid)
-          bridge !(clientNotebook(uuid), Notebook.UnregisterEvent())
+          bridge !(clientNotebook(uuid), NotebookActor.UnregisterEvent())
           clientNotebook -= uuid
           bridge ! PoisonPill
         }
@@ -69,7 +69,7 @@ with AtmosphereSupport {
           // Register for notebook event
           logger.info("register_notebook_event, {}", uuid)
           clientNotebook += uuid -> notebookId
-          bridge !(notebookId, Notebook.RegisterEvent())
+          bridge !(notebookId, NotebookActor.RegisterEvent())
         }
         case JsonMessage(json) => logger.warn("unknown_atmo_message, {}", json)
         case other => logger.warn("unknown, {}", other)

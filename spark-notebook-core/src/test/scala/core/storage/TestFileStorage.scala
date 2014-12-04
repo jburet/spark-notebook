@@ -6,6 +6,7 @@ import java.nio.file.Paths
 import akka.actor.{ActorRef, ActorSystem}
 import akka.testkit.{TestActorRef, ImplicitSender, TestKit}
 import akka.util.Timeout
+import core.interpreter.SparkInterpreter.InterpreterResult
 import core.storage.FileStorageActor._
 import scala.concurrent.duration._
 import org.scalatest.{BeforeAndAfter, BeforeAndAfterAll, Matchers, FlatSpecLike}
@@ -52,7 +53,7 @@ with BeforeAndAfterAll with BeforeAndAfter {
   "add content in empty notebook" should "create new content file" in {
     val testContent = "val test = \"test\"\nsc"
     storage ! Create("test")
-    storage ! WriteContent("test", testContent)
+    storage ! WriteContent("test", Array(testContent))
     val test = Paths.get(baseDir, "test", "content.scala")
     test.toFile.exists() should be(true)
     test.toFile.isFile should be(true)
@@ -69,8 +70,8 @@ with BeforeAndAfterAll with BeforeAndAfter {
     val testContent = "val test = \"test\"\nsc"
     val testContent2 = "val test2 = \"test_updated\"\nsc"
     storage ! Create("test")
-    storage ! WriteContent("test", testContent)
-    storage ! WriteContent("test", testContent2)
+    storage ! WriteContent("test", Array(testContent))
+    storage ! WriteContent("test", Array(testContent2))
     val test = Paths.get(baseDir, "test", "content.scala")
     test.toFile.exists() should be(true)
     test.toFile.isFile should be(true)
@@ -81,6 +82,28 @@ with BeforeAndAfterAll with BeforeAndAfter {
     source.close()
 
     lines should include(testContent2)
+  }
+
+  "add new paragraph content in existing notebook" should "update content file" in {
+    val testContent = "val test = \"test\"\nsc"
+    val testContent2 = "val test2 = \"test_updated\"\nsc"
+    storage ! Create("test")
+    storage ! WriteContent("test", Array(testContent, testContent2))
+    val test = Paths.get(baseDir, "test", "content.scala")
+    test.toFile.exists() should be(true)
+    test.toFile.isFile should be(true)
+    val source = scala.io.Source.fromFile(test.toAbsolutePath.toString)
+
+    val lines = source.mkString
+    println(lines)
+    source.reset().getLines().length should be(5)
+    source.close()
+    lines should include(testContent2)
+    lines should include(testContent)
+    lines should include(
+      """
+        |/// NEW PARAGRAPH
+      """.stripMargin)
   }
 
   "add result in existing notebook" should "create new result file" in {
@@ -120,19 +143,39 @@ with BeforeAndAfterAll with BeforeAndAfter {
     val testContent = "var test = \"test\""
     val testResult = "test: String"
     storage ! Create("test")
-    storage ! WriteContent("test", testContent)
+    storage ! WriteContent("test", Array(testContent))
     storage ! WriteResult("test", testResult)
     storage ! ReadContent("test")
-    expectMsg(5 second, "var test = \"test\"")
+    expectMsg(5 second, "var test = \"test\"\n")
   }
 
   "read result" should "return content" in {
     val testContent = "var test = \"test\""
     val testResult = "test: String"
     storage ! Create("test")
-    storage ! WriteContent("test", testContent)
+    storage ! WriteContent("test", Array(testContent))
     storage ! WriteResult("test", testResult)
     storage ! ReadResult("test")
-    expectMsg(5 second, "test: String")
+    expectMsg(5 second, "test: String\n")
+  }
+
+  "read all on new notebook" should "return empty content" in {
+    storage ! ReadAll("test")
+    val content = expectMsgType[Content](15 second)
+    content.paragraphs.length should be(1)
+    content.paragraphs(0).content should be("")
+    content.paragraphs(0).result should be("")
+  }
+
+  "read content with many paragraph" should "return many paragraph" in {
+    val testContent = "var test = \"test\""
+    val testContent2 = "var test2 = \"test2\""
+    val testResult = "test: String"
+    val testResult2 = "test2: String"
+    storage ! Create("test")
+    storage ! WriteContent("test", Array(testContent, testContent2))
+    storage ! ReadContent("test")
+    val c = expectMsgType[String](15 second)
+    println(c)
   }
 }

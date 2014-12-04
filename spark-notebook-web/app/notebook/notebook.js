@@ -12,37 +12,47 @@ angular.module('sparkNotebook.notebook', ['ngRoute', 'angular.atmosphere'])
 .controller('NotebookCtrl', ['$scope', '$http', '$location', 'atmosphereService', function($scope, $http, $location, atmosphereService) {
 
   $scope.id = ''
+  $scope.newContent=''
+  $scope.notebook = undefined
 
   $scope.init = function() {
     $scope.id = $location.search().id
   	$http.get('http://localhost:8080/notebook/'+$scope.id).
 		success(function(data) {
-			$scope.content = data.content
-      $scope.result = data.result
+      $scope.notebook = data
 		});
   }
 
-	$scope.save = function() {
-		$http.put('http://localhost:8080/notebook/'+$scope.id, $scope.content).
-			success(function(data) {
+	$scope.save = function(callback) {
+    // Check if new content
+    if($scope.newContent.length > 0){
+      // Add to paragraphs object an clean 'new data'
+      $scope.notebook.paragraphs.push({content: $scope.newContent, result:'', data:''})
+      $scope.newContent = ''
+    }
 
+    var pdata = []
+    angular.forEach($scope.notebook.paragraphs, function(p){
+      pdata.push(p.content)
+    })
+		$http.put('http://localhost:8080/notebook/'+$scope.id, pdata).
+			success(function(data) {
+        callback(data)
 			});
 	};
 
-	$scope.play = function(content) {
-		var data = {content: $scope.content, result: ""}
-		$http.put('http://localhost:8080/notebook/'+$scope.id+'', data)
-			.success(function() {$http.post('http://localhost:8080/notebook/'+$scope.id+'/job').
-				success(function(data) {
+	$scope.play = function() {
+		$scope.save(function() {$http.post('http://localhost:8080/notebook/'+$scope.id+'/job').
+      success(function(data) {
 
-				})
-			})
+      })
+    })
 	}
 
   $scope.refresh = function() {
 	$http.get('http://localhost:8080/notebook/'+$scope.id).
 		success(function(data) {
-			$scope.result = data.result
+			$scope.notebook = data
 		});
   };
 
@@ -51,7 +61,15 @@ angular.module('sparkNotebook.notebook', ['ngRoute', 'angular.atmosphere'])
     _editor.setAutoScrollEditorIntoView(true);
     _editor.setOption("maxLines", 20);
     _editor.setOption("minLines", 4);
-  };
+  }
+
+  $scope.displayRes = function(p){
+    return p.result.length === 0
+  }
+
+  $scope.displayData = function(p){
+    return p.data.length === 0
+  }
 
   // Async
   $scope.model = {

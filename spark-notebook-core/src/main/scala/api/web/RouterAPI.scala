@@ -35,7 +35,7 @@ class RouterAPI(actorSystem: ActorSystem, notebooks: ActorRef) extends ScalatraS
   // Get notebook list
   get("/notebooks") {
     new AsyncResult {
-      val is = notebooks ? FileStorageActor.List()
+      val is = notebooks ? FileStorageActor.ListFile()
     }
   }
 
@@ -61,11 +61,11 @@ class RouterAPI(actorSystem: ActorSystem, notebooks: ActorRef) extends ScalatraS
   }
 
   put("/notebook/:id") {
-    val content = parsedBody.extract[Content]
+    val content = parsedBody.extract[Array[String]]
     val id = params("id")
     notebooks ? Notebooks.Open(id) onComplete {
       case Success(notebook: ActorRef) => {
-        notebook ! WriteContent(id, content.content)
+        notebook ! WriteContent(id, content)
         Accepted()
       }
       case Failure(ex) => halt(500, ex.getMessage)

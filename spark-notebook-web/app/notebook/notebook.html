@@ -2,24 +2,31 @@
 
   <h2 style="margin-bottom:20px">{{id}}</h2>
   <div id="menu" style="margin-left: auto;margin-right: auto;width: 70%;">
-    <button class="PaperButton PaperFab PaperFab--colored" id="play_notebook" ng-click="play(content)"><img src="images/navigation/svg/design/ic_arrow_drop_down_24px.svg"></button>
-    <button class="PaperButton PaperFab PaperFab--colored" id="play_notebook" ng-click="play(content)"><img src="images/navigation/svg/design/ic_arrow_drop_up_24px.svg"></button>
-    <button class="PaperButton PaperFab PaperFab--colored" id="play_notebook" ng-click="play(content)"><img src="images/av/svg/design/ic_play_arrow_24px.svg"></button>
+    <button class="PaperButton PaperFab" id="play_notebook" ng-click="play(content)"><img src="images/navigation/svg/design/ic_arrow_drop_down_24px.svg"></button>
+    <button class="PaperButton PaperFab" id="play_notebook" ng-click="play(content)"><img src="images/navigation/svg/design/ic_arrow_drop_up_24px.svg"></button>
+    <button class="PaperButton PaperFab" id="play_notebook" ng-click="play(content)"><img src="images/av/svg/design/ic_play_arrow_24px.svg"></button>
       </div>
-  <div class="Paragraph">
-    <div style="display:table; position:relative; margin-top:20px; width:100%">
-      <div style="display:table-cell;"><p>In [1]:</p></div>
-      <div style="display:table-cell; width:90%; border: 1px solid lightgray;" ui-ace="{mode: 'scala', onLoad : aceLoaded }" ng-model="content"></div>
-    </div>
+  <div ng-repeat="p in notebook.paragraphs">
+    <div class="Paragraph">
+      <div style="display:table; position:relative; margin-top:20px; width:100%">
+        <div style="display:table-cell;"><p>In [1]:</p></div>
+        <div style="display:table-cell; width:90%; border: 1px solid lightgray;" ui-ace="{mode: 'scala', onLoad : aceLoaded }" ng-model="p.content"></div>
+      </div>
 
-    <div style="display:table; position:relative; margin-top:20px; width:100%">
-      <div style="display:table-cell;"><p>stdout [1]:</p></div>
-      <div style="display:table-cell; width:90%; border: 1px solid lightgray;" ui-ace="{ onLoad : aceLoaded }" ng-model="result" readonly="true"></div>
-    </div>
+      <div style="display:table; position:relative; margin-top:20px; width:100%" ng-hide="displayRes(p)">
+        <div style="display:table-cell;"><p>stdout [1]:</p></div>
+        <div style="display:table-cell; width:90%; border: 1px solid lightgray;" ui-ace="{ onLoad : aceLoaded }" ng-model="p.result" readonly="true"></div>
+      </div>
 
-    <div style="display:table; position:relative; margin-top:20px; width:100%">
-      <div style="display:table-cell;"><p>data [1]:</p></div>
-      <div style="display:table-cell; width:90%"></div>
+      <div style="display:table; position:relative; margin-top:20px; width:100%" ng-hide="displayData(p)">
+        <div style="display:table-cell;"><p>data [1]:</p></div>
+        <div style="display:table-cell; width:90%"></div>
+      </div>
     </div>
   </div>
-</div>
+  <!-- Add an empty new parapgrah for adding new content -->
+  <div style="display:table; position:relative; margin-top:20px; width:100%">
+    <div style="display:table-cell;"><p>In []:</p></div>
+    <div style="display:table-cell; width:90%; border: 1px solid lightgray;" ui-ace="{mode: 'scala', onLoad : aceLoaded }" ng-model="newContent"></div>
+  </div>
+  </div>

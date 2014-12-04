@@ -24,26 +24,26 @@ class Notebooks extends Actor with ActorLogging {
 
 
   def receive = LoggingReceive {
-    case command: FileStorageActor.List => {
+    case command: FileStorageActor.ListFile => {
       storage forward command
     }
     case CreateNotebook() => {
       // Generate unique id for notebook
       val uid = UUID.randomUUID().toString
       // Store
-      val nb = context.actorOf(Props(classOf[Notebook], uid, storage), "notebook_"+uid)
+      val nb = context.actorOf(Props(classOf[NotebookActor], uid, storage), "notebook_"+uid)
       storage ! FileStorageActor.Create(uid)
       openNotebooks += uid -> nb
-      nb ! Notebook.InitNotebook()
+      nb ! NotebookActor.InitNotebook()
       sender ! uid
     }
     case Open(id) => {
       openNotebooks.get(id) match {
         case None => {
           // Load from storage
-          val nb = context.actorOf(Props(classOf[Notebook], id, storage), "notebook_"+id)
+          val nb = context.actorOf(Props(classOf[NotebookActor], id, storage), "notebook_"+id)
           openNotebooks += id -> nb
-          nb ! Notebook.InitNotebook()
+          nb ! NotebookActor.InitNotebook()
           sender ! nb
         }
         case Some(nb: ActorRef) => {
@@ -60,10 +60,10 @@ class Notebooks extends Actor with ActorLogging {
       n !(job, jobid)
       sender ! jobid
     }
-    case (notebookId: String, register: Notebook.RegisterEvent) => {
+    case (notebookId: String, register: NotebookActor.RegisterEvent) => {
       openNotebooks(notebookId) forward register
     }
-    case (notebookId: String, ur: Notebook.UnregisterEvent) => {
+    case (notebookId: String, ur: NotebookActor.UnregisterEvent) => {
       openNotebooks(notebookId) forward ur
     }
   }
