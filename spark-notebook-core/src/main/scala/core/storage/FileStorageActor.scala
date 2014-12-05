@@ -7,6 +7,8 @@ import akka.event.LoggingReceive
 import com.google.common.base.Charsets
 import core.storage.FileStorageActor._
 
+import scala.util.{Failure, Success}
+
 class FileStorageActor extends Actor with ActorLogging {
 
   var baseDir: Path = _
@@ -36,57 +38,70 @@ class FileStorageActor extends Actor with ActorLogging {
     }
     case WriteContent(id: String, content: Array[String]) => {
       val newFile = baseDir.resolve(id).resolve("content.scala")
+      // FIXME ADD A HEADER in API
+      val header = ""
       // Create content each paragraph is separated by a comment line
-      val finalContent = content.mkString(
-        """
-          |/// NEW PARAGRAPH
-        """.stripMargin)
+      val finalContent = (header +: content.map(c => if (c!= null && (c.length == 0 || !c.takeRight(1).charAt(0).equals('\n'))) {
+        c + "\n"
+      } else {
+        c
+      })).mkString("// PARAGRAPH 0\n")
       Files.write(newFile, finalContent.getBytes(Charsets.UTF_8), StandardOpenOption.WRITE, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)
     }
-    case WriteResult(id: String, content: String) => {
+    case WriteResult(id: String, resContent: Array[String]) => {
       val newFile = baseDir.resolve(id).resolve("result.txt")
-      Files.write(newFile, content.getBytes(Charsets.UTF_8), StandardOpenOption.WRITE, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)
+      // FIXME ADD A HEADER in API
+      val header = ""
+      // Create content each paragraph is separated by a comment line
+      val finalContent = (header +: resContent.map(c => if (c!= null && (c.length == 0 || !c.takeRight(1).charAt(0).equals('\n'))) {
+        c + "\n"
+      } else {
+        c
+      })).mkString("// PARAGRAPH 0\n")
+      Files.write(newFile, finalContent.getBytes(Charsets.UTF_8), StandardOpenOption.WRITE, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)
     }
     case ReadContent(id: String) => {
-      doReadContent(id, "content.scala", (message: List[String]) => sender ! message.mkString("\n"))
+      doReadContent(id, "content.scala", (message: List[String]) => sender ! message)
 
     }
     case ReadResult(id: String) => {
-      doReadContent(id, "result.txt", (message: List[String]) => sender ! message.mkString("\n"))
+      doReadContent(id, "result.txt", (message: List[String]) => sender ! message)
     }
     case ReadAll(id: String) => {
       var c: List[String] = List()
       var r: List[String] = List()
       doReadContent(id, "content.scala", (message: List[String]) => c = message)
       doReadContent(id, "result.txt", (message: List[String]) => r = message)
-
-      sender ! Content(Array(Paragraph("", "", "")))
+      val ps = c.zipAll(r, "", "").map(p => {
+        Paragraph(p._1, p._2, "")
+      }).toArray
+      val content = Content(ps)
+      sender ! content
     }
     case other => log.error("unknown_message, {}, from, {}", Array(other, sender))
   }
 
   def doReadContent(id: String, file: String, success: List[String] => Unit) = {
     val content = baseDir.resolve(id).resolve(file).toFile
+    log.info("parse_content, {}", content)
     content.exists() match {
       case true => {
-        val s = scala.io.Source.fromFile(content).getLines().foldLeft(List[String]())((acc: List[String], l: String) => {
-          var nacc = acc
-          if(nacc.isEmpty){
-            nacc = nacc ::: List("")
+        val s = scala.io.Source.fromFile(content).getLines().mkString("\n")
+        ParagraphParser(s) match {
+          case Success(ps) => {
+            success(ps.toList)
           }
-          // If /// NEW PARAGRAPH append a new element to list
-          if (l.equals("/// NEW PARAGRAPH")) {
-            nacc = acc ::: List("")
-          } else {
-            // append line to last element
-            val nll = nacc.reverse.head + l + "\n"
-            nacc = nacc.dropRight(1) ::: List(nll)
+          case Failure(e) => {
+            log.error(e, "cannot_load_file, {}", id)
+            success(List[String]())
           }
-          nacc
-        })
-        success(s)
+        }
+
       }
-      case false => success(List[String]())
+      case false => {
+        log.error("cannot_load_file, {}", id)
+        success(List[String]())
+      }
     }
   }
 }
@@ -109,7 +124,7 @@ object FileStorageActor {
 
   case class WriteContent(id: String, content: Array[String])
 
-  case class WriteResult(id: String, result: String)
+  case class WriteResult(id: String, result: Array[String])
 
   case class ListFile()
 

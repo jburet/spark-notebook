@@ -7,14 +7,12 @@ import scala.util.{Try, Success, Failure}
 
 object ParagraphParser extends {
 
-  def apply(input: ParserInput): Try[Unit] = {
+  def apply(input: ParserInput): Try[Seq[String]] = {
 
     val parser = new ParagraphParser(input)
-    parser.paragraph.run() match {
+    parser.document.run() match {
       case Success(result) => {
-
-        println(result);
-        Success(result);
+        Success(result)
       }
       case Failure(e: ParseError) => println("Expression is not valid: " + parser.formatError(e, showTraces = true)); Failure(e)
       case Failure(e) => println("Unexpected error during parsing run: " + e); Failure(e)
@@ -25,19 +23,43 @@ object ParagraphParser extends {
 
 class ParagraphParser(val input: ParserInput) extends Parser {
 
-  def NON_CAPTURING_CRLF = rule("\n\r" | "\n")
+  def NON_CAPTURING_CRLF = CharPredicate('\n')
 
+  def document = rule {
+    //noEmptyDocument | nonValidDocument
+    noEmptyDocument
+  }
+
+  def nonValidDocument = rule {
+    oneOrMore(capture(paragraph))
+  }
+
+  def noEmptyDocument = rule {
+    header ~ separator ~ oneOrMore(capture(paragraph)).separatedBy(separator)
+  }
 
   def paragraph = rule {
-    oneOrMore(separator | line).separatedBy(NON_CAPTURING_CRLF)
+    zeroOrMore(line) ~ optional(lastLine)
   }
 
   def line = rule {
-    capture(zeroOrMore(CharPredicate.Printable)) ~> (Line(_))
+    !paragraphBegin ~ zeroOrMore(CharPredicate.Printable) ~ NON_CAPTURING_CRLF
+  }
+
+  def lastLine = rule {
+    !paragraphBegin ~ zeroOrMore(CharPredicate.Printable) ~ EOI
   }
 
   def separator = rule {
-    "// PARAGRAPH " ~ capture(oneOrMore(CharPredicate.Digit)) ~> (Sep(_))
+    paragraphBegin ~ oneOrMore(CharPredicate.Digit) ~ NON_CAPTURING_CRLF
+  }
+
+  def paragraphBegin = rule {
+    "// PARAGRAPH "
+  }
+
+  def header = rule {
+    zeroOrMore(line)
   }
 
 

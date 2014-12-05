@@ -48,19 +48,23 @@ class NotebookActor(val id: String, val storage: ActorRef) extends Actor with Ac
     // Play current content of notebook
     case (job: ActorRef, jid: String) => {
       storage ? ReadContent(id) onComplete {
-        case Success(content: String) => {
+        case Success(content: List[String]) => {
           sint ?(job, jid, content) onSuccess {
-            case InterpreterResult(content: String) => storage ! WriteResult(id, content)
+            case res: List[InterpreterResult] => {
+              storage ! WriteResult(id, res.map(ir => ir.content).toArray)
+            }
           }
         }
       }
     }
     case ir: InterpreterResult => {
-      storage ! WriteResult(id, ir.content)
+      storage ! WriteResult(id, Array(ir.content))
+    }
+    case irs: Array[InterpreterResult] => {
+      storage ! WriteResult(id, irs.map(i => i.content))
     }
     case _: RegisterEvent => {
       connectedClient += sender
-      println(connectedClient)
     }
     case _: UnregisterEvent => {
       connectedClient -= sender

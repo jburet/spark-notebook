@@ -172,6 +172,15 @@ class SparkInterpreter(appname: String) extends Actor with ActorLogging {
       job ! JobComplete(id)
       out.reset()
     }
+    case (job: ActorRef, id: String, line: List[String]) => {
+      sender ! line.map(code => {
+        out.reset()
+        interpret(code)
+        InterpreterResult(out.toString())
+      })
+      job ! JobComplete(id)
+      out.reset()
+    }
     case _: Stop => close()
     case other => log.warning("invalid_message, " + other)
   })

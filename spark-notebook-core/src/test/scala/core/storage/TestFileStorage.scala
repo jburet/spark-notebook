@@ -60,7 +60,8 @@ with BeforeAndAfterAll with BeforeAndAfter {
     val source = scala.io.Source.fromFile(test.toAbsolutePath.toString)
 
     val lines = source.mkString
-    source.reset().getLines().length should be(2)
+    // header + first sep
+    source.reset().getLines().length should be(4)
     source.close()
     lines should include(testContent)
 
@@ -78,7 +79,7 @@ with BeforeAndAfterAll with BeforeAndAfter {
     val source = scala.io.Source.fromFile(test.toAbsolutePath.toString)
 
     val lines = source.mkString
-    source.reset().getLines().length should be(2)
+    source.reset().getLines().length should be(4)
     source.close()
 
     lines should include(testContent2)
@@ -96,20 +97,17 @@ with BeforeAndAfterAll with BeforeAndAfter {
 
     val lines = source.mkString
     println(lines)
-    source.reset().getLines().length should be(5)
+    source.reset().getLines().length should be(7)
     source.close()
     lines should include(testContent2)
     lines should include(testContent)
-    lines should include(
-      """
-        |/// NEW PARAGRAPH
-      """.stripMargin)
+    lines should include("// PARAGRAPH")
   }
 
   "add result in existing notebook" should "create new result file" in {
     val testContent = "result\nresult2"
     storage ! Create("test")
-    storage ! WriteResult("test", testContent)
+    storage ! WriteResult("test", Array(testContent))
     val test = Paths.get(baseDir, "test", "result.txt")
     test.toFile.exists() should be(true)
     test.toFile.isFile should be(true)
@@ -125,8 +123,8 @@ with BeforeAndAfterAll with BeforeAndAfter {
     val testContent = "result\nresult2"
     val testContent2 = "result\nresult2\nestul3"
     storage ! Create("test")
-    storage ! WriteResult("test", testContent)
-    storage ! WriteResult("test", testContent2)
+    storage ! WriteResult("test", Array(testContent))
+    storage ! WriteResult("test", Array(testContent2))
     val test = Paths.get(baseDir, "test", "result.txt")
     test.toFile.exists() should be(true)
     test.toFile.isFile should be(true)
@@ -144,7 +142,7 @@ with BeforeAndAfterAll with BeforeAndAfter {
     val testResult = "test: String"
     storage ! Create("test")
     storage ! WriteContent("test", Array(testContent))
-    storage ! WriteResult("test", testResult)
+    storage ! WriteResult("test", Array(testResult))
     storage ! ReadContent("test")
     expectMsg(5 second, "var test = \"test\"\n")
   }
@@ -154,7 +152,7 @@ with BeforeAndAfterAll with BeforeAndAfter {
     val testResult = "test: String"
     storage ! Create("test")
     storage ! WriteContent("test", Array(testContent))
-    storage ! WriteResult("test", testResult)
+    storage ! WriteResult("test", Array(testResult))
     storage ! ReadResult("test")
     expectMsg(5 second, "test: String\n")
   }

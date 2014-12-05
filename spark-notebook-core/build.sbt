@@ -21,6 +21,8 @@ resolvers += "Sonatype OSS Snapshots" at "http://oss.sonatype.org/content/reposi
 
 libraryDependencies += "org.apache.spark" %% "spark-repl" % "1.1.0" exclude("org.eclipse.jetty", "*") exclude("log4j", "*") exclude("org.slf4j", "*")
 
+libraryDependencies += "org.apache.spark" %% "spark-sql" % "1.1.0" exclude("org.eclipse.jetty", "*") exclude("log4j", "*") exclude("org.slf4j", "*")
+
 libraryDependencies += "org.scalatest" %% "scalatest" % "2.0" % "test"
 
 libraryDependencies += "org.scalatra" %% "scalatra" % ScalatraVersion exclude("com.typesafe.akka", "*")

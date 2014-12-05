@@ -59,6 +59,7 @@ angular.module('sparkNotebook.notebook', ['ngRoute', 'angular.atmosphere'])
   $scope.aceLoaded = function(_editor) {
     // Options
     _editor.setAutoScrollEditorIntoView(true);
+    _editor.setBehavioursEnabled(false)
     _editor.setOption("maxLines", 20);
     _editor.setOption("minLines", 4);
   }
