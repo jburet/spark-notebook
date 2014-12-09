@@ -24,7 +24,7 @@ class NotebookActor(val id: String, val storage: ActorRef) extends Actor with Ac
 
   import _root_.akka.pattern.ask
 
-  implicit val defaultTimeout = Timeout(10 second)
+  implicit val defaultTimeout = Timeout(3600 second)
 
   import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -51,17 +51,18 @@ class NotebookActor(val id: String, val storage: ActorRef) extends Actor with Ac
         case Success(content: List[String]) => {
           sint ?(job, jid, content) onSuccess {
             case res: List[InterpreterResult] => {
-              storage ! WriteResult(id, res.map(ir => ir.content).toArray)
+              storage ! WriteStdout(id, res.map(ir => ir.stdout).toArray)
+              storage ! WriteResult(id, res.map(ir => ir.jsonContent).toArray)
             }
           }
         }
       }
     }
     case ir: InterpreterResult => {
-      storage ! WriteResult(id, Array(ir.content))
+      storage ! WriteStdout(id, Array(ir.stdout))
     }
     case irs: Array[InterpreterResult] => {
-      storage ! WriteResult(id, irs.map(i => i.content))
+      storage ! WriteStdout(id, irs.map(i => i.stdout))
     }
     case _: RegisterEvent => {
       connectedClient += sender

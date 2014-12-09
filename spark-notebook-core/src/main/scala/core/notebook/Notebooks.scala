@@ -14,7 +14,7 @@ class Notebooks extends Actor with ActorLogging {
 
   import _root_.akka.pattern.ask
 
-  implicit val defaultTimeout = Timeout(10 second)
+  implicit val defaultTimeout = Timeout(3600 second)
 
   import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -60,6 +60,7 @@ class Notebooks extends Actor with ActorLogging {
       n !(job, jobid)
       sender ! jobid
     }
+
     case (notebookId: String, register: NotebookActor.RegisterEvent) => {
       openNotebooks(notebookId) forward register
     }

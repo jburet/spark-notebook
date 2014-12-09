@@ -2,8 +2,9 @@
 
   <h2 style="margin-bottom:20px">{{id}}</h2>
   <div id="menu" style="margin-left: auto;margin-right: auto;width: 70%;">
-    <button id="play_notebook" ng-click="play(content)">PLAY ALL</button>
+    <button id="play_notebook" ng-click="play()">PLAY ALL</button>
       </div>
+
   <div ng-repeat="p in notebook.paragraphs">
     <div class="Paragraph">
       <div style="display:table; position:relative; margin-top:20px; width:100%">
@@ -18,13 +19,15 @@
 
       <div style="display:table; position:relative; margin-top:20px; width:100%" ng-hide="displayData(p)">
         <div style="display:table-cell;"><p>data [1]:</p></div>
-        <div style="display:table-cell; width:90%"></div>
+        <div style="display:table-cell; width:90%">
+            <div display-data data="p"/>
+        </div>
       </div>
     </div>
   </div>
-  <!-- Add an empty new parapgrah for adding new content -->
-  <div style="display:table; position:relative; margin-top:20px; width:100%">
-    <div style="display:table-cell;"><p>In []:</p></div>
-    <div style="display:table-cell; width:90%; border: 1px solid lightgray;" ui-ace="{mode: 'scala', onLoad : aceLoaded }" ng-model="newContent"></div>
-  </div>
-  </div>
+</div>
+<!-- Add an empty new parapgrah for adding new content -->
+<div style="display:table; position:relative; margin-top:20px; width:100%">
+  <div style="display:table-cell;"><p>In []:</p></div>
+  <div style="display:table-cell; width:90%; border: 1px solid lightgray;" ui-ace="{mode: 'scala', onLoad : aceLoaded }" ng-model="newContent"></div>
+</div>

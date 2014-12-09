@@ -8,4 +8,5 @@ spark-notebook-core/notebook/
 spark-notebook-web/.sass-cache/
 spark-notebook-web/.tmp/
 spark-notebook-web/gulpfile.js
+spark-notebook-web/dist/
 target

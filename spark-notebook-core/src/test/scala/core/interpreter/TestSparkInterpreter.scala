@@ -33,14 +33,14 @@ with Matchers with BeforeAndAfter with BeforeAndAfterAll {
   "an interpreter" should "execute simple code" in {
     sint ! Init()
     sint !(TestActorRef(new Job("1", None)), "1", "val out = \"test\"")
-    expectMsg(15 second, InterpreterResult("out: String = test\n"))
+    expectMsg(15 second, InterpreterResult("out: String = test\n", ""))
   }
 
   "an interpreter with compile error" should "report error" in {
     sint ! Init()
     val job1 = TestActorRef(new Job("1", None))
     sint !(job1, "1", "val out = error_compile")
-    expectMsgType[InterpreterResult](15 second).content should include("not found: value error_compile")
+    expectMsgType[InterpreterResult](15 second).stdout should include("not found: value error_compile")
 
   }
 
@@ -50,7 +50,7 @@ with Matchers with BeforeAndAfter with BeforeAndAfterAll {
     sint !(TestActorRef(new Job("1", None)), "1", "case class Person(name:String, age:Int)")
     sint !(TestActorRef(new Job("2", None)), "2", "val people = sc.parallelize(Seq(Person(\"moon\", 33), Person(\"jobs\", 51), Person(\"gates\", 51), Person(\"park\", 34)))")
     expectMsgType[InterpreterResult](15 second)
-    expectMsgType[InterpreterResult](15 second).content should include("people: org.apache.spark.rdd.RDD[Person]")
+    expectMsgType[InterpreterResult](15 second).stdout should include("people: org.apache.spark.rdd.RDD[Person]")
   }
 
 }

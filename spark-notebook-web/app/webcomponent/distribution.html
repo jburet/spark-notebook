@@ -1,0 +1,39 @@
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+
+<polymer-element name="graph-distribution"
+         attributes="data container">
+  <template>
+  </template>
+  <script>
+    Polymer('graph-distribution', {
+        created: function() {
+          this.data = [];
+          this.container = ""
+        },
+        domReady: function(){
+          var chart = new Highcharts.Chart({
+            chart: {
+                renderTo: this.container,
+                type: 'column'
+            },
+            title: {
+                text: this.data.name
+            },
+            xAxis: {
+                categories: this.data.categories
+            },
+            yAxis: {
+                title: {
+                    text: this.data.name
+                }
+            },
+            series: [
+            {
+              name: 'count',
+              data: this.data.count
+            }]
+          });
+        }
+      });
+  </script>
+</polymer-element>

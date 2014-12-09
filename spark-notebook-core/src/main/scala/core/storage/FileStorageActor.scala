@@ -11,6 +11,10 @@ import scala.util.{Failure, Success}
 
 class FileStorageActor extends Actor with ActorLogging {
 
+  val STDOUT_FILENAME = "stdout.txt"
+  val CONTENT_FILENAME = "content.scala"
+  val RESULT_FILENAME = "result.json"
+
   var baseDir: Path = _
 
   def receive = LoggingReceive {
@@ -37,48 +41,50 @@ class FileStorageActor extends Actor with ActorLogging {
       sender ! lnb
     }
     case WriteContent(id: String, content: Array[String]) => {
-      val newFile = baseDir.resolve(id).resolve("content.scala")
-      // FIXME ADD A HEADER in API
-      val header = ""
-      // Create content each paragraph is separated by a comment line
-      val finalContent = (header +: content.map(c => if (c!= null && (c.length == 0 || !c.takeRight(1).charAt(0).equals('\n'))) {
-        c + "\n"
-      } else {
-        c
-      })).mkString("// PARAGRAPH 0\n")
-      Files.write(newFile, finalContent.getBytes(Charsets.UTF_8), StandardOpenOption.WRITE, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)
+      writeToFile(id, CONTENT_FILENAME, content)
     }
-    case WriteResult(id: String, resContent: Array[String]) => {
-      val newFile = baseDir.resolve(id).resolve("result.txt")
-      // FIXME ADD A HEADER in API
-      val header = ""
-      // Create content each paragraph is separated by a comment line
-      val finalContent = (header +: resContent.map(c => if (c!= null && (c.length == 0 || !c.takeRight(1).charAt(0).equals('\n'))) {
-        c + "\n"
-      } else {
-        c
-      })).mkString("// PARAGRAPH 0\n")
-      Files.write(newFile, finalContent.getBytes(Charsets.UTF_8), StandardOpenOption.WRITE, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)
+    case WriteStdout(id: String, content: Array[String]) => {
+      writeToFile(id, STDOUT_FILENAME, content)
+    }
+    case WriteResult(id: String, content: Array[String]) => {
+      writeToFile(id, RESULT_FILENAME, content)
     }
     case ReadContent(id: String) => {
-      doReadContent(id, "content.scala", (message: List[String]) => sender ! message)
-
+      doReadContent(id, CONTENT_FILENAME, (message: List[String]) => sender ! message)
     }
     case ReadResult(id: String) => {
-      doReadContent(id, "result.txt", (message: List[String]) => sender ! message)
+      doReadContent(id, STDOUT_FILENAME, (message: List[String]) => sender ! message)
     }
     case ReadAll(id: String) => {
       var c: List[String] = List()
+      var s: List[String] = List()
       var r: List[String] = List()
-      doReadContent(id, "content.scala", (message: List[String]) => c = message)
-      doReadContent(id, "result.txt", (message: List[String]) => r = message)
-      val ps = c.zipAll(r, "", "").map(p => {
-        Paragraph(p._1, p._2, "")
+
+      doReadContent(id, CONTENT_FILENAME, (message: List[String]) => c = message)
+      doReadContent(id, STDOUT_FILENAME, (message: List[String]) => s = message)
+      doReadContent(id, RESULT_FILENAME, (message: List[String]) => r = message)
+      val ps = c.zipAll(s, "", "").zipAll(r, ("", ""), "").map(p => {
+        Paragraph(p._1._1, p._1._2, p._2)
       }).toArray
       val content = Content(ps)
       sender ! content
     }
     case other => log.error("unknown_message, {}, from, {}", Array(other, sender))
+  }
+
+  def writeToFile(id: String, filename: String, content: Array[String]) {
+
+    val newFile = baseDir.resolve(id).resolve(filename)
+    // FIXME ADD A HEADER in API
+    val header = ""
+    // Create content each paragraph is separated by a comment line
+    val finalContent = (header +: content.map(c => if (c != null && (c.length == 0 || !c.takeRight(1).charAt(0).equals('\n'))) {
+      c + "\n"
+    } else {
+      c
+    })).mkString("// PARAGRAPH 0\n")
+    log.debug("write_to_file, {}, \ncontent: {}, \nfinal: {}", Array(filename, content.mkString("\n"), finalContent))
+    Files.write(newFile, finalContent.getBytes(Charsets.UTF_8), StandardOpenOption.WRITE, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)
   }
 
   def doReadContent(id: String, file: String, success: List[String] => Unit) = {
@@ -89,6 +95,7 @@ class FileStorageActor extends Actor with ActorLogging {
         val s = scala.io.Source.fromFile(content).getLines().mkString("\n")
         ParagraphParser(s) match {
           case Success(ps) => {
+            log.info("content_parsed, {}", ps.mkString("\n"))
             success(ps.toList)
           }
           case Failure(e) => {
@@ -123,6 +130,8 @@ object FileStorageActor {
   case class Content(paragraphs: Array[Paragraph])
 
   case class WriteContent(id: String, content: Array[String])
+
+  case class WriteStdout(id: String, result: Array[String])
 
   case class WriteResult(id: String, result: Array[String])
 

@@ -107,7 +107,7 @@ with BeforeAndAfterAll with BeforeAndAfter {
   "add result in existing notebook" should "create new result file" in {
     val testContent = "result\nresult2"
     storage ! Create("test")
-    storage ! WriteResult("test", Array(testContent))
+    storage ! WriteStdout("test", Array(testContent))
     val test = Paths.get(baseDir, "test", "result.txt")
     test.toFile.exists() should be(true)
     test.toFile.isFile should be(true)
@@ -123,8 +123,8 @@ with BeforeAndAfterAll with BeforeAndAfter {
     val testContent = "result\nresult2"
     val testContent2 = "result\nresult2\nestul3"
     storage ! Create("test")
-    storage ! WriteResult("test", Array(testContent))
-    storage ! WriteResult("test", Array(testContent2))
+    storage ! WriteStdout("test", Array(testContent))
+    storage ! WriteStdout("test", Array(testContent2))
     val test = Paths.get(baseDir, "test", "result.txt")
     test.toFile.exists() should be(true)
     test.toFile.isFile should be(true)
@@ -142,7 +142,7 @@ with BeforeAndAfterAll with BeforeAndAfter {
     val testResult = "test: String"
     storage ! Create("test")
     storage ! WriteContent("test", Array(testContent))
-    storage ! WriteResult("test", Array(testResult))
+    storage ! WriteStdout("test", Array(testResult))
     storage ! ReadContent("test")
     expectMsg(5 second, "var test = \"test\"\n")
   }
@@ -152,7 +152,7 @@ with BeforeAndAfterAll with BeforeAndAfter {
     val testResult = "test: String"
     storage ! Create("test")
     storage ! WriteContent("test", Array(testContent))
-    storage ! WriteResult("test", Array(testResult))
+    storage ! WriteStdout("test", Array(testResult))
     storage ! ReadResult("test")
     expectMsg(5 second, "test: String\n")
   }

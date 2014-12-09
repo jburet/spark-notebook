@@ -1,6 +1,6 @@
 'use strict';
 
-angular.module('sparkNotebook.notebook', ['ngRoute', 'angular.atmosphere'])
+angular.module('sparkNotebook.notebook', ['ngRoute', 'angular.atmosphere', 'sparkNotebook.directives'])
 
 .config(['$routeProvider', function($routeProvider) {
   $routeProvider.when('/notebook', {
@@ -8,7 +8,6 @@ angular.module('sparkNotebook.notebook', ['ngRoute', 'angular.atmosphere'])
     controller: 'NotebookCtrl'
   });
 }])
-
 .controller('NotebookCtrl', ['$scope', '$http', '$location', 'atmosphereService', function($scope, $http, $location, atmosphereService) {
 
   $scope.id = ''
@@ -18,8 +17,15 @@ angular.module('sparkNotebook.notebook', ['ngRoute', 'angular.atmosphere'])
   $scope.init = function() {
     $scope.id = $location.search().id
   	$http.get('http://localhost:8080/notebook/'+$scope.id).
-		success(function(data) {
-      $scope.notebook = data
+		success(function(response) {
+      response.paragraphs.map(function(el){
+        try{
+          el.data = JSON.parse(el.data)
+        } catch(e){
+          console.info("parsing error: ", e)
+        }
+      })
+      $scope.notebook = response
 		});
   }
 
@@ -48,13 +54,6 @@ angular.module('sparkNotebook.notebook', ['ngRoute', 'angular.atmosphere'])
       })
     })
 	}
-
-  $scope.refresh = function() {
-	$http.get('http://localhost:8080/notebook/'+$scope.id).
-		success(function(data) {
-			$scope.notebook = data
-		});
-  };
 
   $scope.aceLoaded = function(_editor) {
     // Options

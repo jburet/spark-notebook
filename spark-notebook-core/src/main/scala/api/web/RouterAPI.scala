@@ -9,6 +9,7 @@ import core.storage.FileStorageActor.{WriteContent, Content}
 import org.json4s.{Formats, DefaultFormats}
 import org.scalatra._
 import org.scalatra.json._
+import org.slf4j.LoggerFactory
 import scala.concurrent.duration._
 
 import scala.concurrent.{Promise, ExecutionContext}
@@ -16,11 +17,14 @@ import scala.util.{Try, Success, Failure}
 
 class RouterAPI(actorSystem: ActorSystem, notebooks: ActorRef) extends ScalatraServlet with CorsSupport with FutureSupport with JacksonJsonSupport {
 
+
+  private val logger = LoggerFactory.getLogger(getClass)
+
   protected implicit def executor: ExecutionContext = actorSystem.dispatcher
 
   import _root_.akka.pattern.ask
 
-  implicit val defaultTimeout = Timeout(10 second)
+  implicit val defaultTimeout = Timeout(3600 second)
 
   protected implicit val jsonFormats: Formats = DefaultFormats
 
@@ -63,6 +67,7 @@ class RouterAPI(actorSystem: ActorSystem, notebooks: ActorRef) extends ScalatraS
   put("/notebook/:id") {
     val content = parsedBody.extract[Array[String]]
     val id = params("id")
+    logger.debug("/notebook/{}, put", id)
     notebooks ? Notebooks.Open(id) onComplete {
       case Success(notebook: ActorRef) => {
         notebook ! WriteContent(id, content)
