@@ -12,12 +12,12 @@
         <div style="display:table-cell; width:90%; border: 1px solid lightgray;" ui-ace="{mode: 'scala', onLoad : aceLoaded }" ng-model="p.content"></div>
       </div>
 
-      <div style="display:table; position:relative; margin-top:20px; width:100%" ng-hide="displayRes(p)">
+      <div style="display:table; position:relative; margin-top:20px; width:100%" ng-hide="hideRes(p)">
         <div style="display:table-cell;"><p>stdout [1]:</p></div>
         <div style="display:table-cell; width:90%; border: 1px solid lightgray;" ui-ace="{ onLoad : aceLoaded }" ng-model="p.result" readonly="true"></div>
       </div>
 
-      <div style="display:table; position:relative; margin-top:20px; width:100%" ng-hide="displayData(p)">
+      <div style="display:table; position:relative; margin-top:20px; width:100%" ng-hide="hideData(p)">
         <div style="display:table-cell;"><p>data [1]:</p></div>
         <div style="display:table-cell; width:90%">
             <div display-data data="p"/>

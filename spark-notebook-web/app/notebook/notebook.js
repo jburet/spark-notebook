@@ -13,11 +13,20 @@ angular.module('sparkNotebook.notebook', ['ngRoute', 'angular.atmosphere', 'spar
   $scope.id = ''
   $scope.newContent=''
   $scope.notebook = undefined
+  $scope.displayOut = false
 
   $scope.init = function() {
     $scope.id = $location.search().id
-  	$http.get('http://localhost:8080/notebook/'+$scope.id).
-		success(function(response) {
+    updateData($scope.id)
+  }
+
+  $scope.refresh = function() {
+    updateData($scope.id)
+  }
+
+  var updateData = function(id) {
+    $http.get('http://localhost:8080/notebook/'+id).
+    success(function(response) {
       response.paragraphs.map(function(el){
         try{
           el.data = JSON.parse(el.data)
@@ -26,7 +35,11 @@ angular.module('sparkNotebook.notebook', ['ngRoute', 'angular.atmosphere', 'spar
         }
       })
       $scope.notebook = response
-		});
+    });
+  }
+
+  $scope.toogleDisplayOut = function() {
+    $scope.displayOut = !$scope.displayOut
   }
 
 	$scope.save = function(callback) {
@@ -63,11 +76,11 @@ angular.module('sparkNotebook.notebook', ['ngRoute', 'angular.atmosphere', 'spar
     _editor.setOption("minLines", 4);
   }
 
-  $scope.displayRes = function(p){
-    return p.result.length === 0
+  $scope.hideRes = function(p){
+    return !$scope.displayOut || p.result.length === 0
   }
 
-  $scope.displayData = function(p){
+  $scope.hideData = function(p){
     return p.data.length === 0
   }
 

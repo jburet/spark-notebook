@@ -1,0 +1,66 @@
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+
+<polymer-element name="graph-heatmap"
+attributes="data container">
+<template>
+
+</template>
+<script>
+Polymer('graph-heatmap', {
+  created: function() {
+    this.data = [];
+    this.container = ""
+  },
+  domReady: function(){
+    var chart = new Highcharts.Chart({
+
+      chart: {
+        type: 'heatmap',
+        renderTo: this.container
+      },
+
+      tooltip: {
+          backgroundColor: null,
+          borderWidth: 0,
+          distance: 10,
+          shadow: false,
+          useHTML: true,
+          style: {
+              padding: 0,
+              color: 'black'
+          }
+      },
+
+      xAxis: {
+          categories: this.data.xcat,
+          labels:
+            {
+              enabled: false
+            }
+      },
+
+      yAxis: {
+          categories: this.data.ycat
+      },
+
+      colorAxis: {
+        stops: [
+        [0, '#3060cf'],
+        [0.5, '#fffbbc'],
+        [0.9, '#c4463a'],
+        [1, '#c4463a']
+        ],
+        min: 1,
+        max: 10,
+        type: 'linear',
+        tickInterval: 1
+      },
+
+      series: [{
+        data: this.data.value
+      }]
+    });
+  }
+});
+</script>
+</polymer-element>

@@ -23,6 +23,15 @@ angular.module('sparkNotebook.directives', [])
           container.setAttribute("id", "graph");
           element[0].appendChild(container)
           break;
+        case "heatmap":
+          var table = document.createElement("graph-heatmap")
+          table.setAttribute("data", JSON.stringify(data.data))
+          table.setAttribute("container", 'graph')
+          element[0].appendChild(table)
+          var container = document.createElement("div")
+          container.setAttribute("id", "graph");
+          element[0].appendChild(container)
+          break;
       }
     }
   };
