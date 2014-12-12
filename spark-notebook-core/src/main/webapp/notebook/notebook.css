@@ -1,0 +1,26 @@
+div.notebook {
+	margin-top: 0px;
+	margin-bottom: 0px;
+	margin-left: 5%;
+	margin-right: 5%;
+}
+
+.ace_editor {
+	position: relative !important;
+	border: 1px solid lightgray;
+	margin: auto;
+	width: 80%;
+}
+.scrollmargin {
+	height: 100px;
+  text-align: center;
+}
+
+.highcharts-tooltip>span {
+	background: rgba(255,255,255,0.85);
+	border: 1px solid silver;
+	border-radius: 3px;
+	box-shadow: 1px 1px 2px #888;
+	padding: 8px;
+	z-index: 2;
+}

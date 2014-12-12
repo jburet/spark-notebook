@@ -5,22 +5,20 @@ import java.util.UUID
 import akka.actor.{ActorLogging, Props, ActorRef, Actor}
 import akka.event.LoggingReceive
 import akka.util.Timeout
+import com.typesafe.config.ConfigFactory
 import core.notebook.Notebooks._
 import core.storage.FileStorageActor
 import scala.concurrent.duration._
 
 
 class Notebooks extends Actor with ActorLogging {
-
-  import _root_.akka.pattern.ask
-
+  val config = ConfigFactory.load("notebook")
+  val storageLocation = config.getString("notebook.storage.location")
   implicit val defaultTimeout = Timeout(3600 second)
-
-  import scala.concurrent.ExecutionContext.Implicits.global
 
   var openNotebooks = Map[String, ActorRef]()
   val storage = context.actorOf(Props[FileStorageActor], "fs-storage")
-  storage ! FileStorageActor.Init("notebook")
+  storage ! FileStorageActor.Init(storageLocation)
 
 
   def receive = LoggingReceive {
@@ -31,7 +29,7 @@ class Notebooks extends Actor with ActorLogging {
       // Generate unique id for notebook
       val uid = UUID.randomUUID().toString
       // Store
-      val nb = context.actorOf(Props(classOf[NotebookActor], uid, storage), "notebook_"+uid)
+      val nb = context.actorOf(Props(classOf[NotebookActor], uid, storage), "notebook_" + uid)
       storage ! FileStorageActor.Create(uid)
       openNotebooks += uid -> nb
       nb ! NotebookActor.InitNotebook()
@@ -41,7 +39,7 @@ class Notebooks extends Actor with ActorLogging {
       openNotebooks.get(id) match {
         case None => {
           // Load from storage
-          val nb = context.actorOf(Props(classOf[NotebookActor], id, storage), "notebook_"+id)
+          val nb = context.actorOf(Props(classOf[NotebookActor], id, storage), "notebook_" + id)
           openNotebooks += id -> nb
           nb ! NotebookActor.InitNotebook()
           sender ! nb

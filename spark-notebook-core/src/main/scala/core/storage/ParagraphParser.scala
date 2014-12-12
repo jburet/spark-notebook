@@ -11,8 +11,11 @@ object ParagraphParser extends {
 
     val parser = new ParagraphParser(input)
     parser.document.run() match {
-      case Success(result) => {
+      case Success(Some(result)) => {
         Success(result)
+      }
+      case Success(None) => {
+        Success(Seq(""))
       }
       case Failure(e: ParseError) => println("Expression is not valid: " + parser.formatError(e, showTraces = true)); Failure(e)
       case Failure(e) => println("Unexpected error during parsing run: " + e); Failure(e)
@@ -31,11 +34,11 @@ class ParagraphParser(val input: ParserInput) extends Parser {
   }
 
   def nonValidDocument = rule {
-    oneOrMore(capture(paragraph))
+    optional(capture(paragraph))
   }
 
   def noEmptyDocument = rule {
-    header ~ separator ~ oneOrMore(capture(paragraph)).separatedBy(separator)
+    optional(header) ~ separator ~ optional(oneOrMore(capture(paragraph)).separatedBy(separator))
   }
 
   def paragraph = rule {

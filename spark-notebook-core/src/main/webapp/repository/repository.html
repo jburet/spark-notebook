@@ -1,0 +1,11 @@
+<h2>Repository </h2>
+
+<div class="notebook" ng-init="init()">
+  <button id="create_notebook" ng-click="newNotebook()">Create</button>
+
+  <ul>
+    <li ng-repeat="n in content">
+      <a href="" ng-click="loadNotebook(n)">{{n}}</a>
+    </li>
+  </ul>
+</div>

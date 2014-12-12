@@ -80,4 +80,5 @@ class TestParagraphParser extends FlatSpec with Matchers {
     pp.isSuccess should be(true)
     pp.get.length should be(1)
   }
+
 }

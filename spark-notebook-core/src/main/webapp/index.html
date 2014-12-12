@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<!--[if lt IE 7]>      <html lang="en" ng-app="sparkNotebook" class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
+<!--[if IE 7]>         <html lang="en" ng-app="sparkNotebook" class="no-js lt-ie9 lt-ie8"> <![endif]-->
+<!--[if IE 8]>         <html lang="en" ng-app="sparkNotebook" class="no-js lt-ie9"> <![endif]-->
+<!--[if gt IE 8]><!--> <html lang="en" ng-app="sparkNotebook" class="no-js"> <!--<![endif]-->
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Spark-notebook</title>
+    <meta name="description" content="">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="bower_components/html5-boilerplate/css/normalize.css">
+    <link rel="stylesheet" href="bower_components/html5-boilerplate/css/main.css">
+    <link rel="stylesheet" href="styles/main.css">
+    <link rel="stylesheet" href="notebook/notebook.css">
+    <link rel="stylesheet" href="repository/repository.css">
+    <script src="bower_components/html5-boilerplate/js/vendor/modernizr-2.6.2.min.js"></script>
+    <script src="bower_components/webcomponentsjs/webcomponents.min.js"></script>
+    <link rel="import" href="webcomponent/datatable.html">
+    <link rel="import" href="webcomponent/list.html">
+    <link rel="import" href="webcomponent/distribution.html">
+    <link rel="import" href="webcomponent/heatmap.html">
+    <link rel="import" href="webcomponent/scatter.html">
+</head>
+<body>
+
+<div ng-view></div>
+
+<script src="bower_components/angular/angular.js"></script>
+<script src="bower_components/angular-route/angular-route.js"></script>
+<script src="bower_components/atmosphere/atmosphere.js"></script>
+<script src="bower_components/highcharts-release/adapters/standalone-framework.src.js"></script>
+<script src="bower_components/highcharts-release/highcharts.src.js"></script>
+<script src="bower_components/highcharts-release/highcharts-more.src.js"></script>
+<script src="bower_components/highcharts-release/highcharts-3d.src.js"></script>
+<script src="bower_components/highcharts-release/modules/exporting.src.js"></script>
+<script src="bower_components/highcharts-release/modules/data.src.js"></script>
+<script src="bower_components/highcharts-release/modules/heatmap.src.js"></script>
+
+<script src="common/heatmap.js"></script>
+<script type="text/javascript" src="bower_components/ace-builds/src/ace.js"></script>
+<script type="text/javascript" src="bower_components/angular-ui-ace/ui-ace.js"></script>
+<script src="spark-notebook.js"></script>
+<script src="notebook/notebook.js"></script>
+<script src="repository/repository.js"></script>
+<script src="directives/data-display.js"></script>
+<script src="service/angular-atmosphere-service.js"></script>
+
+</body>
+</html>

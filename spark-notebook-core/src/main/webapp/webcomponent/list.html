@@ -1,0 +1,26 @@
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+
+<polymer-element name="data-list"
+         attributes="data">
+  <template>
+    <table class="ui table segment" id="table_element">
+             <tr>
+                 <th>
+                     {{data.header}}
+                 </th>
+             </tr>
+             <tr template repeat="{{row in data.value}}">
+                <td>
+                   {{row}}
+                </td>
+             </tr>
+         </table>
+  </template>
+  <script>
+    Polymer('data-list', {
+        created: function() {
+          this.data = [];
+        }
+      });
+  </script>
+</polymer-element>

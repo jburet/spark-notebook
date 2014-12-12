@@ -1,4 +1,5 @@
-name := "spark-notebook"
+
+name := "spark-notebook-core"
 
 version := "1.0"
 
@@ -15,7 +16,6 @@ val jettyVersion = "8.1.16.v20140903"
 fork in(Test, run) := true
 
 javaOptions in(Test, run) += "-Djava.net.preferIPv4Stack=true"
-
 
 resolvers += "Sonatype OSS Snapshots" at "http://oss.sonatype.org/content/repositories/snapshots/"
 

@@ -14,7 +14,7 @@ class ScalatraBootstrap extends LifeCycle {
 
   override def init(context: ServletContext) {
     context mount(new NotebookStatusController(system, notebooks), "/async/*")
-    context mount(new RouterAPI(system, notebooks), "/*")
+    context mount(new RouterAPI(system, notebooks), "/api-v1/*")
   }
 
   override def destroy(context: ServletContext) {

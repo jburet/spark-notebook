@@ -1,0 +1,15 @@
+{
+  "name": "spark-notebook",
+  "version": "0.0.1",
+  "dependencies": {
+    "angular": "1.2.x",
+    "angular-route": "1.2.x",
+    "angular-loader": "1.2.x",
+    "angular-mocks": "~1.2.x",
+    "html5-boilerplate": "~4.3.0",
+    "angular-ui-ace": "~0.1.1",
+    "atmosphere": "~2.2.1",
+    "polymer": "Polymer/polymer#~0.5.1",
+    "highcharts-release": "~4.0.4"
+  }
+}
